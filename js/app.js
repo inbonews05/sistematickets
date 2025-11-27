@@ -140,4 +140,3 @@ document.addEventListener("DOMContentLoaded", () => {
     filtroPrioridad.addEventListener("change", actualizarLista);
     buscador.addEventListener("input", actualizarLista);
 });
-
