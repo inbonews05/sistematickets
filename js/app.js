@@ -1,17 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
-
     const form = document.getElementById("ticketForm");
     const lista = document.getElementById("listaTickets");
     const contadorUrgentes = document.getElementById("contadorUrgentes");
     const filtroPrioridad = document.getElementById("filtroPrioridad");
     const buscador = document.getElementById("buscador");
 
-    // ---- Cargar tickets guardados ----
-    let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
-    actualizarLista();
+    let tickets = [];
 
+    // ==============================
+    //   Cargar tickets del storage
+    // ==============================
+    if (localStorage.getItem("tickets")) {
+        tickets = JSON.parse(localStorage.getItem("tickets"));
+        actualizarLista();
+    }
 
-    // ---- Crear Ticket ----
+    // ==============================
+    //     Crear Ticket
+    // ==============================
     form.addEventListener("submit", (e) => {
         e.preventDefault();
 
@@ -20,7 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
         let prioridad = document.getElementById("prioridad").value;
         let mensaje = document.getElementById("mensaje").value.trim();
 
-        // Validación
         let valido = true;
 
         if (nombre === "") {
@@ -49,7 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!valido) return;
 
-        // Crear objeto ticket
         let ticket = {
             id: Date.now(),
             nombre,
@@ -60,42 +64,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
         tickets.push(ticket);
 
-        // Guardar en LocalStorage
+        // Guardar en storage
         localStorage.setItem("tickets", JSON.stringify(tickets));
 
         actualizarLista();
         form.reset();
     });
 
-
-    // -------- Renderizar Lista ------
+    // ==============================
+    //   Actualizar Lista (Render)
+    // ==============================
     function actualizarLista() {
-
         let filtro = filtroPrioridad.value;
         let busqueda = buscador.value.toLowerCase();
 
         let filtrados = tickets.filter(t => {
-            let coincidePrioridad = (filtro === "todos" || t.prioridad === filtro);
-            let coincideTexto =
+            let cumplePrioridad = filtro === "todos" || t.prioridad === filtro;
+            let cumpleBusqueda =
                 t.nombre.toLowerCase().includes(busqueda) ||
+                t.email.toLowerCase().includes(busqueda) ||
                 t.mensaje.toLowerCase().includes(busqueda);
 
-            return coincidePrioridad && coincideTexto;
+            return cumplePrioridad && cumpleBusqueda;
         });
 
         lista.innerHTML = "";
 
         filtrados.forEach(t => {
             let div = document.createElement("div");
-            div.className = "card p-3 mb-3";
+            div.className = "card p-3 mb-3 shadow-sm";
 
             div.innerHTML = `
                 <h5>${t.nombre}</h5>
                 <p><strong>Correo:</strong> ${t.email}</p>
-                <p><strong>Prioridad:</strong> ${t.prioridad}</p>
+                <p><strong>Prioridad:</strong> <span class="badge bg-${
+                    t.prioridad === "alta" ? "danger" : t.prioridad === "normal" ? "warning" : "secondary"
+                }">${t.prioridad}</span></p>
                 <p>${t.mensaje}</p>
 
-                <button class="btn btn-danger btn-sm mt-2" data-id="${t.id}">
+                <button class="btn btn-danger btn-sm eliminar" data-id="${t.id}">
                     Eliminar
                 </button>
             `;
@@ -103,31 +110,34 @@ document.addEventListener("DOMContentLoaded", () => {
             lista.append(div);
         });
 
-        // Contador de urgentes
-        contadorUrgentes.textContent =
-            tickets.filter(t => t.prioridad === "alta").length;
+        // Contador urgentes
+        let urgentes = tickets.filter(t => t.prioridad === "alta").length;
+        contadorUrgentes.textContent = urgentes;
 
-        // Botones de eliminar
-        document.querySelectorAll("button[data-id]").forEach(btn => {
+        // Activar botones de eliminar
+        document.querySelectorAll(".eliminar").forEach(btn => {
             btn.addEventListener("click", eliminarTicket);
         });
     }
 
-
-    // ---- Eliminar Ticket ----
+    // ==============================
+    //   Eliminar ticket
+    // ==============================
     function eliminarTicket(e) {
-        let id = parseInt(e.target.dataset.id);
+        let id = Number(e.target.dataset.id);
 
         tickets = tickets.filter(t => t.id !== id);
 
+        // Guardar cambios
         localStorage.setItem("tickets", JSON.stringify(tickets));
 
         actualizarLista();
     }
 
-
-    // ---- Filtros ----
+    // ==============================
+    //   Filtros en vivo
+    // ==============================
     filtroPrioridad.addEventListener("change", actualizarLista);
     buscador.addEventListener("input", actualizarLista);
-
 });
+
