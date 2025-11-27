@@ -1,19 +1,18 @@
-# Sistema de Tickets – Unidad 4
+# Sistema de Tickets — Unidad 4
 
-Mini aplicación SPA hecha con HTML, Bootstrap 5 y JavaScript.
+Mini aplicación web para la gestión simple de tickets/comentarios.  
+Proyecto desarrollado como parte de la Unidad 4.
 
-## Cómo ejecutar localmente
-1. Clonar repo:
-   git clone https://github.com/tuusuario/sistematickets.git
-2. Abrir index.html en el navegador.
+---
 
-## URL de GitHub Pages
-https://tuusuario.github.io/sistematickets/
+## 📌 GitHub Pages (Página Pública)
 
-## Funcionalidades
-- Formulario con validación
-- Creación de objetos Message
-- Lista dinámica de mensajes
-- Filtro por prioridad
-- Eliminar ticket
-- Persistencia con localStorage
+El proyecto está publicado en:
+
+🔗 **https://inbonews05.github.io/sistematickets/**
+
+---
+
+## 📁 Estructura del Proyecto
+
+>>>>>>> 10f431c (Subida inicial del proyecto)
