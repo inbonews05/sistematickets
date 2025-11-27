@@ -1,11 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
+
     const form = document.getElementById("ticketForm");
     const lista = document.getElementById("listaTickets");
     const contadorUrgentes = document.getElementById("contadorUrgentes");
     const filtroPrioridad = document.getElementById("filtroPrioridad");
     const buscador = document.getElementById("buscador");
 
-    let tickets = [];
+    // ---- Cargar tickets guardados ----
+    let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+    actualizarLista();
+
 
     // ---- Crear Ticket ----
     form.addEventListener("submit", (e) => {
@@ -56,22 +60,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
         tickets.push(ticket);
 
+        // Guardar en LocalStorage
+        localStorage.setItem("tickets", JSON.stringify(tickets));
+
         actualizarLista();
         form.reset();
     });
 
-    // ---- Renderizar Lista ----
+
+    // -------- Renderizar Lista ------
     function actualizarLista() {
+
         let filtro = filtroPrioridad.value;
         let busqueda = buscador.value.toLowerCase();
 
         let filtrados = tickets.filter(t => {
-            let cumplePrioridad = filtro === "todos" || t.prioridad === filtro;
-            let cumpleBusqueda = 
+            let coincidePrioridad = (filtro === "todos" || t.prioridad === filtro);
+            let coincideTexto =
                 t.nombre.toLowerCase().includes(busqueda) ||
                 t.mensaje.toLowerCase().includes(busqueda);
 
-            return cumplePrioridad && cumpleBusqueda;
+            return coincidePrioridad && coincideTexto;
         });
 
         lista.innerHTML = "";
@@ -85,17 +94,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p><strong>Correo:</strong> ${t.email}</p>
                 <p><strong>Prioridad:</strong> ${t.prioridad}</p>
                 <p>${t.mensaje}</p>
+
+                <button class="btn btn-danger btn-sm mt-2" data-id="${t.id}">
+                    Eliminar
+                </button>
             `;
 
             lista.append(div);
         });
 
-        // Actualizar contador urgentes
-        let urgentes = tickets.filter(t => t.prioridad === "alta").length;
-        contadorUrgentes.textContent = urgentes;
+        // Contador de urgentes
+        contadorUrgentes.textContent =
+            tickets.filter(t => t.prioridad === "alta").length;
+
+        // Botones de eliminar
+        document.querySelectorAll("button[data-id]").forEach(btn => {
+            btn.addEventListener("click", eliminarTicket);
+        });
     }
 
-    // Filtros en vivo
+
+    // ---- Eliminar Ticket ----
+    function eliminarTicket(e) {
+        let id = parseInt(e.target.dataset.id);
+
+        tickets = tickets.filter(t => t.id !== id);
+
+        localStorage.setItem("tickets", JSON.stringify(tickets));
+
+        actualizarLista();
+    }
+
+
+    // ---- Filtros ----
     filtroPrioridad.addEventListener("change", actualizarLista);
     buscador.addEventListener("input", actualizarLista);
+
 });
