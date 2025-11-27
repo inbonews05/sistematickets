@@ -1,152 +1,101 @@
-// -------- Clase Message --------
-class Message {
-    constructor(nombre, email, texto, prioridad) {
-        this.nombre = nombre;
-        this.email = email;
-        this.texto = texto;
-        this.prioridad = prioridad;
-        this.fecha = new Date().toLocaleString();
-        this.leido = false;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("ticketForm");
+    const lista = document.getElementById("listaTickets");
+    const contadorUrgentes = document.getElementById("contadorUrgentes");
+    const filtroPrioridad = document.getElementById("filtroPrioridad");
+    const buscador = document.getElementById("buscador");
 
-    toHTML(id) {
-        return `
-        <div class="card p-3 mb-3 ticket-card prioridad-${this.prioridad} ${this.leido ? "mensaje-leido" : ""}">
-            <h5>${this.nombre} <small class="text-muted">(${this.email})</small></h5>
-            <p>${this.texto}</p>
-            <p><strong>Fecha:</strong> ${this.fecha}</p>
-            <p><strong>Prioridad:</strong> ${this.prioridad.toUpperCase()}</p>
+    let tickets = [];
 
-            <button class="btn btn-success btn-sm" onclick="marcarLeido(${id})">
-                ${this.leido ? "Marcar no leído" : "Marcar leído"}
-            </button>
+    // ---- Crear Ticket ----
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
 
-            <button class="btn btn-danger btn-sm ms-2" onclick="eliminarTicket(${id})">
-                Eliminar
-            </button>
-        </div>`;
-    }
-}
+        let nombre = document.getElementById("nombre").value.trim();
+        let email = document.getElementById("email").value.trim();
+        let prioridad = document.getElementById("prioridad").value;
+        let mensaje = document.getElementById("mensaje").value.trim();
 
-// -------- Variables --------
-let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+        // Validación
+        let valido = true;
 
-const lista = document.getElementById("listaTickets");
-const contadorUrgentes = document.getElementById("contadorUrgentes");
-
-
-// -------- Validación --------
-function validarFormulario(nombre, email, mensaje) {
-    let valido = true;
-
-    document.getElementById("errNombre").innerText = "";
-    document.getElementById("errEmail").innerText = "";
-    document.getElementById("errMensaje").innerText = "";
-
-    if (nombre.length < 3) {
-        document.getElementById("errNombre").innerText = "El nombre debe tener al menos 3 caracteres.";
-        valido = false;
-    }
-
-    if (!email.includes("@") || !email.includes(".")) {
-        document.getElementById("errEmail").innerText = "Correo inválido.";
-        valido = false;
-    }
-
-    if (mensaje.length < 10) {
-        document.getElementById("errMensaje").innerText = "El mensaje debe tener mínimo 10 caracteres.";
-        valido = false;
-    }
-
-    return valido;
-}
-
-
-// -------- Agregar Ticket --------
-document.getElementById("ticketForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    let nombre = document.getElementById("nombre").value.trim();
-    let email = document.getElementById("email").value.trim();
-    let prioridad = document.getElementById("prioridad").value;
-    let mensaje = document.getElementById("mensaje").value.trim();
-
-    if (!validarFormulario(nombre, email, mensaje)) return;
-
-    let nuevo = new Message(nombre, email, mensaje, prioridad);
-    tickets.unshift(nuevo); // más reciente arriba
-
-    guardar();
-    mostrarTickets();
-    contarUrgentes();
-
-    this.reset();
-});
-
-
-// -------- Mostrar Tickets --------
-function mostrarTickets() {
-    lista.innerHTML = "";
-
-    let filtro = document.getElementById("filtroPrioridad").value;
-    let buscar = document.getElementById("buscador").value.toLowerCase();
-
-    tickets.forEach((ticket, index) => {
-
-        if (filtro !== "todos" && ticket.prioridad !== filtro) return;
-
-        if (!ticket.texto.toLowerCase().includes(buscar) &&
-            !ticket.nombre.toLowerCase().includes(buscar)) return;
-
-        lista.innerHTML += ticket.toHTML(index);
-    });
-}
-
-
-// -------- Marcar leído --------
-function marcarLeido(id) {
-    tickets[id].leido = !tickets[id].leido;
-    guardar();
-    mostrarTickets();
-}
-
-
-// -------- Eliminar Ticket --------
-function eliminarTicket(id) {
-    tickets.splice(id, 1);
-    guardar();
-    mostrarTickets();
-    contarUrgentes();
-}
-
-
-// -------- Contar urgentes --------
-function contarUrgentes() {
-    let urg = 0;
-
-    tickets.forEach(t => {
-        switch (t.prioridad) {
-            case "alta":
-                urg++;
-                break;
+        if (nombre === "") {
+            valido = false;
+            document.getElementById("errNombre").textContent = "El nombre es obligatorio";
+            document.getElementById("nombre").classList.add("is-invalid");
+        } else {
+            document.getElementById("nombre").classList.remove("is-invalid");
         }
+
+        if (email === "") {
+            valido = false;
+            document.getElementById("errEmail").textContent = "El correo es obligatorio";
+            document.getElementById("email").classList.add("is-invalid");
+        } else {
+            document.getElementById("email").classList.remove("is-invalid");
+        }
+
+        if (mensaje === "") {
+            valido = false;
+            document.getElementById("errMensaje").textContent = "El mensaje es obligatorio";
+            document.getElementById("mensaje").classList.add("is-invalid");
+        } else {
+            document.getElementById("mensaje").classList.remove("is-invalid");
+        }
+
+        if (!valido) return;
+
+        // Crear objeto ticket
+        let ticket = {
+            id: Date.now(),
+            nombre,
+            email,
+            prioridad,
+            mensaje
+        };
+
+        tickets.push(ticket);
+
+        actualizarLista();
+        form.reset();
     });
 
-    contadorUrgentes.textContent = urg;
-}
+    // ---- Renderizar Lista ----
+    function actualizarLista() {
+        let filtro = filtroPrioridad.value;
+        let busqueda = buscador.value.toLowerCase();
 
+        let filtrados = tickets.filter(t => {
+            let cumplePrioridad = filtro === "todos" || t.prioridad === filtro;
+            let cumpleBusqueda = 
+                t.nombre.toLowerCase().includes(busqueda) ||
+                t.mensaje.toLowerCase().includes(busqueda);
 
-// -------- Guardar --------
-function guardar() {
-    localStorage.setItem("tickets", JSON.stringify(tickets));
-}
+            return cumplePrioridad && cumpleBusqueda;
+        });
 
+        lista.innerHTML = "";
 
-// -------- Eventos --------
-document.getElementById("filtroPrioridad").addEventListener("change", mostrarTickets);
-document.getElementById("buscador").addEventListener("input", mostrarTickets);
+        filtrados.forEach(t => {
+            let div = document.createElement("div");
+            div.className = "card p-3 mb-3";
 
+            div.innerHTML = `
+                <h5>${t.nombre}</h5>
+                <p><strong>Correo:</strong> ${t.email}</p>
+                <p><strong>Prioridad:</strong> ${t.prioridad}</p>
+                <p>${t.mensaje}</p>
+            `;
 
-// -------- Mostrar al inicio --------
-mostrarTickets();
-contarUrgentes();
+            lista.append(div);
+        });
+
+        // Actualizar contador urgentes
+        let urgentes = tickets.filter(t => t.prioridad === "alta").length;
+        contadorUrgentes.textContent = urgentes;
+    }
+
+    // Filtros en vivo
+    filtroPrioridad.addEventListener("change", actualizarLista);
+    buscador.addEventListener("input", actualizarLista);
+});
