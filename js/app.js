@@ -28,27 +28,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let valido = true;
 
-        if (nombre === "") {
+        // ==============================
+        // VALIDACIÓN — COMO PIDE LA PRÁCTICA
+        // ==============================
+
+        // Validar nombre (mínimo 3 caracteres)
+        if (nombre.length < 3) {
             valido = false;
-            document.getElementById("errNombre").textContent = "El nombre es obligatorio";
+            document.getElementById("errNombre").textContent = "El nombre debe tener mínimo 3 caracteres";
             document.getElementById("nombre").classList.add("is-invalid");
         } else {
+            document.getElementById("errNombre").textContent = "";
             document.getElementById("nombre").classList.remove("is-invalid");
         }
 
-        if (email === "") {
+        // Validar email con formato válido
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
             valido = false;
-            document.getElementById("errEmail").textContent = "El correo es obligatorio";
+            document.getElementById("errEmail").textContent = "El correo no tiene un formato válido";
             document.getElementById("email").classList.add("is-invalid");
         } else {
+            document.getElementById("errEmail").textContent = "";
             document.getElementById("email").classList.remove("is-invalid");
         }
 
-        if (mensaje === "") {
+        // Validar mensaje (mínimo 10 caracteres)
+        if (mensaje.length < 10) {
             valido = false;
-            document.getElementById("errMensaje").textContent = "El mensaje es obligatorio";
+            document.getElementById("errMensaje").textContent = "El mensaje debe tener mínimo 10 caracteres";
             document.getElementById("mensaje").classList.add("is-invalid");
         } else {
+            document.getElementById("errMensaje").textContent = "";
             document.getElementById("mensaje").classList.remove("is-invalid");
         }
 
